@@ -4,6 +4,10 @@
 //
 //  Created by Shiv Kalola on 11/9/25.
 //
+//  MODIFIED:
+//  - Moved mentalHealth and physicalHealth here from Avatar.swift
+//  - This is CRITICAL so these stats are saved by PersistenceService.
+//
 
 import Foundation
 
@@ -14,6 +18,12 @@ struct UserProfile: Codable {
     var weightInLbs: Double = 160.0
     var targetSleepHours: Double = 8.0
     
+    // --- CORE TAMAGOTCHI STATS ---
+    // These are now saved and loaded as part of the user's profile.
+    // They range from 0.0 (empty/sick) to 1.0 (full/elite).
+    var mentalHealth: Double = 0.5
+    var physicalHealth: Double = 0.5
+    
     // --- NEW WATER PROPERTIES ---
     var currentWaterOunces: Double = 0.0
     var lastWaterEvaluationDate: Date = Date()
@@ -21,10 +31,6 @@ struct UserProfile: Codable {
     // --- RPM PROPERTIES ---
     var avatarURL: String = ""
     var avatarGender: String = "neutral"
-    
-    // --- **** REMOVED **** ---
-    // We no longer need this, as we are loading local files.
-    // var availableAnimations: [String] = []
-    
+
     // We will save and load this struct from UserDefaults
 }

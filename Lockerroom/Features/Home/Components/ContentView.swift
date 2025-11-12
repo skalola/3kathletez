@@ -87,16 +87,13 @@ struct ContentView: View {
                     Spacer() // Pushes content to the vertical center
                     
                     
-                    // --- **** THIS IS THE FINAL CODE **** ---
+                    // --- **** THIS IS THE MIGRATION **** ---
                     
                     // 3. PLAYER AVATAR (Main Hub)
-                    // --- **** THIS IS THE FIX **** ---
-                    // We removed the 'if let remoteUrl...' check and the 'url: remoteUrl'
-                    // parameter from the NativeAvatarView initializer.
-                    // The view now gets its model from the EnvironmentObject.
                     if viewModel.hasConfiguredAvatar {
                         
-                        NativeAvatarView(
+                        // Use the new RealityKit view
+                        RealityAvatarView(
                             state: viewModel.avatar.currentState,
                             gender: viewModel.userProfile.avatarGender,
                             backgroundColor: viewModel.isHydrating ? .blue.opacity(0.3) : .clear
@@ -119,7 +116,7 @@ struct ContentView: View {
                                 viewModel.appIconButtonTapped()
                             }
                     }
-                    // --- **** END FIX **** ---
+                    // --- **** END MIGRATION **** ---
                     
                     
                     // --- 4. CONDITIONAL ACTION BUTTONS (Menu) ---
@@ -166,8 +163,9 @@ struct ContentView: View {
             
         }
         .animation(.spring(), value: viewModel.isHydrating)
-        .onAppear {
-            viewModel.loadPlayerAvatar()
+        // Use .task to call the new async function
+        .task {
+            await viewModel.loadPlayerAvatar()
         }
         .sheet(isPresented: $viewModel.isShowingSleepView) {
             SleepView(onAlarmSet: { newAlarm in
