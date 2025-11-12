@@ -13,6 +13,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		160379F02EC11FE500FD385A /* Lockerroom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFolders = (
+				Core/Animations,
+			);
 			path = Lockerroom;
 			sourceTree = "<group>";
 		};
@@ -33,6 +36,7 @@
 			isa = PBXGroup;
 			children = (
 				160379F02EC11FE500FD385A /* Lockerroom */,
+				16037A702EC127C500FD385A /* Frameworks */,
 				160379EF2EC11FE500FD385A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +47,13 @@
 				160379EE2EC11FE500FD385A /* Lockerroom.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		16037A702EC127C500FD385A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -251,11 +262,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Lockerroom/Lockerroom.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GGW6DQ293Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "3K ATHLETEZ";
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Allow access to friend list to add them to your team.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to calculate real-time traffic for your sleep schedule.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -283,11 +298,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Lockerroom/Lockerroom.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GGW6DQ293Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "3K ATHLETEZ";
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Allow access to friend list to add them to your team.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to calculate real-time traffic for your sleep schedule.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
