@@ -1,34 +1,73 @@
 //
 //  ActionButtonView.swift
-//  Locker Room
+//  Lockerroom
 //
-//  Created by Shiv Kalola on 11/9/25.
+//  Created by Shiv Kalola on 11/13/25.
 //
-
-import Foundation
 import SwiftUI
 
-// This is a reusable View for your four main action buttons.
+/// This is the view that holds your four main action buttons.
+/// It was missing from ContentView.
 struct ActionButtonView: View {
-    let icon: String
-    let label: String
-    let action: () -> Void // A closure to run when tapped
+    
+    // This view is driven by the HomeViewModel
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(.black)
-                
-                Text(label)
-                    .font(.custom("Avenir-Heavy", size: 12)) // System font
-                    .foregroundColor(.black)
+        HStack(spacing: 15) {
+            // Sleep Button
+            Button(action: viewModel.didTapSleep) {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(Circle())
             }
-            .frame(maxWidth: .infinity, minHeight: 70)
-            .background(Color.white.opacity(0.9))
-            .cornerRadius(15)
-            .shadow(radius: 3)
+            .padding(.leading)
+            
+            // Water Button
+            Button(action: viewModel.didTapWater) {
+                Image(systemName: "drop.fill")
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(Circle())
+            }
+            
+            // *** NEW: Your App Icon in the footer ***
+            Image("3kappicon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 50, height: 50)
+                .opacity(0.7)
+            
+            // Exercise Button
+            Button(action: viewModel.didTapExercise) {
+                Image(systemName: "figure.run")
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(Circle())
+            }
+            
+            // Mindfulness Button
+            Button(action: viewModel.didTapMindfulness) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundColor(.white)
+                    .frame(width: 60, height: 60)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(Circle())
+            }
+            .padding(.trailing)
         }
+        .padding()
+        .background(.ultraThinMaterial)
+        .cornerRadius(40)
+        .shadow(radius: 10)
+        .padding(.bottom, 30)
     }
 }

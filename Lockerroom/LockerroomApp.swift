@@ -4,33 +4,26 @@
 //
 //  Created by Shiv Kalola on 11/9/25.
 //
-
 import SwiftUI
 
 @main
 struct LockerroomApp: App {
     
-    @Environment(\.scenePhase) private var scenePhase
-        
-    // Create all our 'global' view models and services
-    @StateObject private var authViewModel = AuthenticationViewModel()
-    @StateObject private var homeViewModel = HomeViewModel()
+    // *** NEW: State to manage the launch screen ***
+    @State private var isAppReady: Bool = false
     
-    // --- **** THIS IS THE FIX **** ---
-    // We create the AvatarService singleton here and inject it.
-    @StateObject private var avatarService = AvatarService.shared
-    // --- **** END FIX **** ---
-
     var body: some Scene {
         WindowGroup {
-            AuthenticationView()
-                .environmentObject(authViewModel)
-                .environmentObject(homeViewModel)
-                .environmentObject(avatarService) // <-- Inject the service
-        }
-        .onChange(of: scenePhase) { oldPhase, newPhase in
-            if newPhase == .active && oldPhase != .active {
-                homeViewModel.appDidBecomeActive()
+            ZStack {
+                // Show ContentView *underneath*
+                ContentView()
+                    .preferredColorScheme(.dark)
+                
+                // Show LaunchView *on top*
+                if !isAppReady {
+                    LaunchView(isAppReady: $isAppReady)
+                        .transition(.opacity.animation(.easeOut(duration: 0.5)))
+                }
             }
         }
     }

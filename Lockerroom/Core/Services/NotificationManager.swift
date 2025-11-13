@@ -1,146 +1,124 @@
 //
 //  NotificationManager.swift
-//  Locker Room
+//  Lockerroom
 //
 //  Created by Shiv Kalola on 11/9/25.
 //
-
 import Foundation
 import UserNotifications
 
-class NotificationManager {
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     
     static let shared = NotificationManager()
-    private init() {}
-    
-    func checkPermission(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            completion(settings.authorizationStatus == .authorized)
-        }
+
+    private let notificationCenter = UNUserNotificationCenter.current()
+    private let persistenceService = PersistenceService()
+
+    // *** FIX: Changed to public ***
+    override init() {
+        super.init()
+        notificationCenter.delegate = self
     }
     
-    func requestPermission(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound, .criticalAlert]) { granted, error in
-            if let error = error {
-                print("Error requesting notification permission: \(error.localizedDescription)")
+    /// Requests permission to send notifications.
+    func requestAuthorization() {
+        notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("Notification permission granted.")
+            } else if let error = error {
+                print("Notification permission error: \(error.localizedDescription)")
             }
-            completion(granted)
         }
     }
-    
-    func scheduleWakeUpAlarm(alarm: AppAlarm) -> [String] {
-        var notificationIDs: [String] = []
-        
-        // --- FIX 1: Accessing non-optional properties directly ---
-        let bedTimes = alarm.bedTimes
-        let soundName = alarm.soundName
-        // --- END FIX 1 ---
-        
+
+    // MARK: - Alarm Scheduling
+
+    /// Schedules the primary *morning* wake-up alarm.
+    func scheduleWakeUpAlarm(for alarm: AppAlarm) {
         let content = UNMutableNotificationContent()
         content.title = "Time to Wake Up!"
-        content.body = "Time to start your day and feed your athlete!"
+        content.body = "Your Lockerroom alarm is going off."
+        // Use the sound file from your wakerapper project
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "loud_alarm.caf"))
+        content.userInfo = ["alarmID": alarm.id]
         
-        if soundName == "Default" {
-            content.sound = .defaultCritical
-        } else {
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
-        }
-        
-        var dateComponents: DateComponents
-        let repeats: Bool
-        
-        // --- FIX 2: Using correct property name (.wakeUpTime) ---
-        switch alarm.repeatFrequency {
-        case .once:
-            dateComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: alarm.wakeUpTime)
-            repeats = false
-        case .daily:
-            dateComponents = Calendar.current.dateComponents([.hour, .minute], from: alarm.wakeUpTime)
-            repeats = true
-        case .weekly:
-            dateComponents = Calendar.current.dateComponents([.hour, .minute, .weekday], from: alarm.wakeUpTime)
-            repeats = true
-        }
-        // --- END FIX 2 ---
-        
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: repeats)
-        let id = "ALARM-\(alarm.id.uuidString)"
-        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
-        notificationIDs.append(id)
-        
-        let bedtimeTitles = ["Optimal Bedtime", "Good Bedtime", "OK Bedtime", "Minimum Bedtime"]
-        
-        for (index, time) in bedTimes.reversed().enumerated() {
-            let bedtimeContent = UNMutableNotificationContent()
-            bedtimeContent.title = "Bedtime Reminder (\(bedtimeTitles[index]))"
-            
-            let hoursOfSleep = 9.0 - (Double(index) * 1.5)
-            bedtimeContent.body = "Time to go to bed to get your \(hoursOfSleep) hours of sleep."
+        // This category is from your old project, for handling snooze/stop
+        content.categoryIdentifier = "ALARM_CATEGORY"
 
-            bedtimeContent.sound = .default
-            
-            let bedtimeComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: time)
-            let bedtimeTrigger = UNCalendarNotificationTrigger(dateMatching: bedtimeComponents, repeats: false)
-            let bedtimeID = "BEDTIME-\(alarm.id.uuidString)-\(index)"
-            let bedtimeRequest = UNNotificationRequest(identifier: bedtimeID, content: bedtimeContent, trigger: bedtimeTrigger)
-            UNUserNotificationCenter.current().add(bedtimeRequest)
-            notificationIDs.append(bedtimeID)
+        let components = Calendar.current.dateComponents([.hour, .minute], from: alarm.time)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false) // Not repeating
+        let request = UNNotificationRequest(identifier: alarm.id, content: content, trigger: trigger)
+        
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Error scheduling wake-up alarm: \(error.localizedDescription)")
+            } else {
+                print("Successfully scheduled wake-up alarm for \(alarm.time)")
+            }
         }
-        
-        return notificationIDs
     }
     
-    func scheduleWaterNotifications(wakeUpTime: Date, earliestBedtime: Date, totalCups: Int) {
-        let notificationManager = UNUserNotificationCenter.current()
+    /// *** NEW: Schedules the *evening* notification to recommend bedtimes ***
+    func scheduleBedtimeReminder(bedtimes: [Date]) {
+        guard let earliestBedtime = bedtimes.first else { return }
         
-        // Calculate offsets in seconds (1 hour = 3600s)
-        let oneHour: TimeInterval = 3600
-        let eightHours: TimeInterval = 8 * 3600
+        // Schedule the reminder 30 minutes before the *earliest* recommended bedtime
+        let reminderTime = earliestBedtime.addingTimeInterval(-30 * 60)
         
-        // 1. Morning Reminder (1 hour after wake up)
-        let morningTime = wakeUpTime.addingTimeInterval(oneHour)
-        let morningComponents = Calendar.current.dateComponents([.hour, .minute], from: morningTime)
-        let morningTrigger = UNCalendarNotificationTrigger(dateMatching: morningComponents, repeats: true)
+        // Format the times for the notification body
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let timeStrings = bedtimes.map { formatter.string(from: $0) }
         
-        let morningContent = UNMutableNotificationContent()
-        morningContent.title = "💧 Morning Hydration"
-        morningContent.body = "Good morning! Start your day with some water. Your goal is \(totalCups) cups."
-        morningContent.sound = .default
+        // Create the body text with the 4 recommendations
+        let body = "Time to start winding down. Recommended bedtimes: \(timeStrings.joined(separator: ", "))."
+
+        let content = UNMutableNotificationContent()
+        content.title = "Bedtime Reminder"
+        content.body = body
+        content.sound = .default
         
-        let morningRequest = UNNotificationRequest(identifier: "WATER_MORNING", content: morningContent, trigger: morningTrigger)
+        let components = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false) // Not repeating
         
-        // 2. Midday Reminder (8 hours after wake up)
-        let middayTime = wakeUpTime.addingTimeInterval(eightHours)
-        let middayComponents = Calendar.current.dateComponents([.hour, .minute], from: middayTime)
-        let middayTrigger = UNCalendarNotificationTrigger(dateMatching: middayComponents, repeats: true)
+        // Use a static ID to ensure only one bedtime reminder is set
+        let request = UNNotificationRequest(identifier: "BEDTIME_REMINDER", content: content, trigger: trigger)
         
-        let middayContent = UNMutableNotificationContent()
-        middayContent.title = "💧 Afternoon Hydration"
-        middayContent.body = "Don't forget to hydrate! You have about \(totalCups / 2) cups to go."
-        middayContent.sound = .default
+        // Remove any old bedtime reminders first
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: ["BEDTIME_REMINDER"])
         
-        let middayRequest = UNNotificationRequest(identifier: "WATER_MIDDAY", content: middayContent, trigger: middayTrigger)
-        
-        // 3. Evening Reminder (1 hour before earliest bed time)
-        let eveningTime = earliestBedtime.addingTimeInterval(-oneHour)
-        let eveningComponents = Calendar.current.dateComponents([.hour, .minute], from: eveningTime)
-        let eveningTrigger = UNCalendarNotificationTrigger(dateMatching: eveningComponents, repeats: true)
-        
-        let eveningContent = UNMutableNotificationContent()
-        eveningContent.title = "💧 Final Hydration"
-        eveningContent.body = "Last call for water! Finish up your remaining cups before bed."
-        eveningContent.sound = .default
-        
-        let eveningRequest = UNNotificationRequest(identifier: "WATER_EVENING", content: eveningContent, trigger: eveningTrigger)
-        
-        // Add all requests
-        notificationManager.add(morningRequest)
-        notificationManager.add(middayRequest)
-        notificationManager.add(eveningRequest)
+        // Add the new one
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Error scheduling bedtime reminder: \(error.localizedDescription)")
+            } else {
+                print("Successfully scheduled bedtime reminder for \(reminderTime)")
+            }
+        }
+    }
+
+    func cancelNotification(for alarm: AppAlarm) {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [alarm.id])
     }
     
-    func cancelNotifications(with ids: [String]) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+    // MARK: - Persistence (Using your existing service)
+
+    func saveAlarms(_ alarms: [AppAlarm]) {
+        persistenceService.save(alarms: alarms)
+    }
+    
+    func loadAlarms() -> [AppAlarm] {
+        return persistenceService.loadAlarms()
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+    
+    // Handle notification when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Show the notification even when the app is active
+        completionHandler([.banner, .sound, .badge])
     }
 }

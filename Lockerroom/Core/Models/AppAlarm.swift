@@ -2,36 +2,21 @@
 //  AppAlarm.swift
 //  Lockerroom
 //
-//  Created by Shiv Kalola on 11/9/25.
+//  Created by Shiv Kalola on 11/13/25.
 //
-
 import Foundation
 
-// This enum now lives cleanly inside the
-// only model that uses it.
-enum AlarmRepeatFrequency: String, Codable, CaseIterable, Hashable {
-    case once = "Once"
-    case daily = "Daily"
-    case weekly = "Weekly"
-}
-
-// This is the clean, simple model just for sleep alarms.
-struct AppAlarm: Codable, Identifiable, Equatable {
-    let id: UUID
-    var wakeUpTime: Date
-    var bedTimes: [Date]
-    var notificationIDs: [String]
-    var isEnabled: Bool
-    var repeatFrequency: AlarmRepeatFrequency
-    var soundName: String
+/// This is the correct, simple alarm model.
+/// The "smartness" is in *calculating* the `time`, not storing extra properties.
+struct AppAlarm: Identifiable, Codable, Hashable {
+    var id: String = UUID().uuidString
     
-    init(wakeUpTime: Date, bedTimes: [Date], repeatFrequency: AlarmRepeatFrequency, soundName: String) {
-        self.id = UUID()
-        self.wakeUpTime = wakeUpTime
-        self.bedTimes = bedTimes
-        self.notificationIDs = []
-        self.isEnabled = true
-        self.repeatFrequency = repeatFrequency
-        self.soundName = soundName
-    }
+    /// The final, calculated wake-up time.
+    var time: Date
+    
+    /// Whether the alarm is enabled.
+    var isEnabled: Bool
+    
+    /// A user-facing label, e.g., "Weekday Alarm".
+    var label: String = "Alarm"
 }

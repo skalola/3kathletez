@@ -13,9 +13,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		160379F02EC11FE500FD385A /* Lockerroom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			explicitFolders = (
-				Core/Animations,
-			);
 			path = Lockerroom;
 			sourceTree = "<group>";
 		};
@@ -281,7 +278,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.3ksportz.Lockerroom;
+				PRODUCT_BUNDLE_IDENTIFIER = sportz3k.sportz3k;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -317,7 +314,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.3ksportz.Lockerroom;
+				PRODUCT_BUNDLE_IDENTIFIER = sportz3k.sportz3k;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

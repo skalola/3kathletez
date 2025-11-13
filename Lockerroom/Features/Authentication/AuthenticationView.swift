@@ -1,65 +1,68 @@
 //
 //  AuthenticationView.swift
-//  Locker Room
+//  Lockerroom
 //
 //  Created by Shiv Kalola on 11/9/25.
 //
-
-import Foundation
 import SwiftUI
-// We no longer need AuthenticationServices
-// import AuthenticationServices
 
 struct AuthenticationView: View {
     @StateObject private var viewModel = AuthenticationViewModel()
-    @StateObject private var homeViewModel = HomeViewModel()
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        
-        if viewModel.isAuthenticated {
-            ContentView()
-                .environmentObject(homeViewModel)
-                .environmentObject(viewModel)
-                // When we successfully log in, we tell the HomeViewModel
-                // to load the Game Center avatar.
-                .onAppear {
-                    homeViewModel.loadPlayerAvatar()
-                }
-        } else {
-            ZStack {
-                Color.black.ignoresSafeArea()
+        // This is your correct Game Center / Apple Auth UI
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("Welcome to Lockerroom")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
                 
-                VStack(spacing: 40) {
-                    Image("3kappicon")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 150)
-                        .shadow(radius: 5)
-                    
-                    Text("Welcome to 3K Sportz")
-                        .font(.title)
-                        .fontWeight(.bold)
+                Text("Sign in to sync your athlete.")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+
+                Button(action: {
+                    // TODO: Add your Game Center/Auth logic
+                    print("Signing in...")
+                    // viewModel.signInWithGameCenter()
+                    dismiss()
+                }) {
+                    Text("Sign in with Game Center")
+                        .font(.headline)
                         .foregroundColor(.white)
-                    
-                    // --- THIS IS THE NEW BUTTON ---
-                    // We replaced SignInWithAppleButton with a normal Button
-                    Button(action: {
-                        viewModel.signIn()
-                    }) {
-                        HStack {
-                            Image(systemName: "gamecontroller.fill")
-                            Text("Sign In with Game Center")
-                                .fontWeight(.medium)
-                        }
+                        .padding()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(10)
-                        .padding(.horizontal, 40)
-                    }
+                        .background(Color.blue)
+                        .cornerRadius(12)
                 }
+                .padding(.horizontal)
+                
+                Spacer()
             }
+            .navigationBarItems(leading: Button("Later") {
+                dismiss()
+            })
+            .padding(.top, 40)
         }
+    }
+}
+
+struct AuthenticationView_Previews: PreviewProvider {
+    static var previews: some View {
+        // *** FIX: Removed all Unity mock objects ***
+        // This now provides a 100% native preview environment.
+        
+        // 1. Create mock dependencies
+        let mockStateManager = AvatarStateManager(persistenceService: PersistenceService())
+        let mockHomeVM = HomeViewModel(stateManager: mockStateManager) // Create VM
+
+        // 2. Create the ContentView (the parent)
+        ContentView(viewModel: mockHomeVM) // Pass VM
+            .environmentObject(mockStateManager)
+            // 3. Present the AuthenticationView as a sheet
+            .sheet(isPresented: .constant(true)) {
+                AuthenticationView()
+            }
     }
 }
